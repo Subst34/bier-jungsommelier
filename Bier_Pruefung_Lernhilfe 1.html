@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍺 Bier-Jungsommelier Lernhilfe</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600&display=swap');
+  :root {
+    --gold: #C8973A; --amber: #D4A843; --dark: #1A1008;
+    --brown: #3D1F05; --cream: #FDF6E3; --muted: #7A5C3A;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--dark); color: var(--cream); font-family: 'Source Sans 3', sans-serif; font-weight: 300; min-height: 100vh; }
+  header { background: linear-gradient(135deg, var(--brown) 0%, #5C2D0A 50%, var(--brown) 100%); border-bottom: 3px solid var(--gold); padding: 2rem 1.5rem 1.5rem; text-align: center; position: relative; overflow: hidden; }
+  header::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(200,151,58,0.03) 10px, rgba(200,151,58,0.03) 20px); }
+  header h1 { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 5vw, 3rem); color: var(--gold); letter-spacing: 2px; text-shadow: 0 2px 8px rgba(0,0,0,0.5); position: relative; }
+  header p { color: var(--amber); margin-top: 0.5rem; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; position: relative; }
+  .progress-bar-wrap { background: var(--brown); border-bottom: 2px solid rgba(200,151,58,0.3); padding: 0.8rem 1.5rem; display: flex; align-items: center; gap: 1rem; font-size: 0.85rem; color: var(--amber); }
+  .progress-track { flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--amber)); border-radius: 4px; transition: width 0.5s ease; width: 0%; }
+  .tabs { display: flex; border-bottom: 2px solid rgba(200,151,58,0.3); background: var(--brown); overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab-btn { background: none; border: none; color: var(--muted); padding: 0.9rem 1.2rem; cursor: pointer; font-family: 'Source Sans 3', sans-serif; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.2s; }
+  .tab-btn:hover { color: var(--amber); }
+  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); background: rgba(200,151,58,0.08); }
+  main { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
+  .section { display: none; }
+  .section.active { display: block; }
+  .kategorie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .kategorie-karte { background: linear-gradient(135deg, var(--brown), #2A1200); border: 1px solid rgba(200,151,58,0.3); border-radius: 10px; padding: 1.2rem; cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden; }
+  .kategorie-karte::after { content: '→'; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: var(--gold); font-size: 1.2rem; opacity: 0; transition: opacity 0.2s, right 0.2s; }
+  .kategorie-karte:hover { border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+  .kategorie-karte:hover::after { opacity: 1; right: 0.8rem; }
+  .kat-icon { font-size: 1.8rem; margin-bottom: 0.5rem; }
+  .kat-titel { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 1rem; margin-bottom: 0.25rem; }
+  .kat-info { font-size: 0.8rem; color: var(--muted); }
+  .akkordeon { margin-bottom: 0.6rem; border-radius: 8px; overflow: hidden; border: 1px solid rgba(200,151,58,0.2); }
+  .akk-header { background: linear-gradient(90deg, rgba(61,31,5,0.9), rgba(42,18,0,0.9)); padding: 0.9rem 1.1rem; cursor: pointer; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; transition: background 0.2s; }
+  .akk-header:hover { background: linear-gradient(90deg, rgba(80,40,5,0.9), rgba(60,28,0,0.9)); }
+  .akk-frage { font-size: 0.88rem; color: var(--cream); line-height: 1.4; font-weight: 400; }
+  .akk-num { font-size: 0.7rem; color: var(--gold); background: rgba(200,151,58,0.15); padding: 2px 7px; border-radius: 3px; white-space: nowrap; margin-top: 1px; font-weight: 600; letter-spacing: 0.5px; }
+  .akk-arrow { color: var(--gold); font-size: 0.9rem; transition: transform 0.3s; flex-shrink: 0; margin-top: 2px; }
+  .akkordeon.open .akk-arrow { transform: rotate(180deg); }
+  .akk-body { display: none; padding: 1rem 1.1rem; background: rgba(253,246,227,0.04); border-top: 1px solid rgba(200,151,58,0.15); font-size: 0.88rem; line-height: 1.7; color: #E8D9C0; }
+  .akkordeon.open .akk-body { display: block; }
+  .akk-body ul { padding-left: 1.2rem; }
+  .akk-body li { margin-bottom: 0.25rem; }
+  .akk-body strong { color: var(--gold); }
+  .akk-body p { margin-bottom: 0.3rem; }
+  .akk-body table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.83rem; }
+  .akk-body th { background: rgba(200,151,58,0.2); color: var(--gold); padding: 0.4rem 0.7rem; text-align: left; font-weight: 600; }
+  .akk-body td { padding: 0.35rem 0.7rem; border-bottom: 1px solid rgba(200,151,58,0.1); }
+  .quiz-karte { background: linear-gradient(135deg, var(--brown), #2A1200); border: 1px solid rgba(200,151,58,0.3); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; }
+  .quiz-counter { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; }
+  .quiz-frage { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--cream); margin-bottom: 1.2rem; line-height: 1.5; }
+  .quiz-optionen { display: flex; flex-direction: column; gap: 0.5rem; }
+  .quiz-opt { background: rgba(255,255,255,0.05); border: 1px solid rgba(200,151,58,0.2); border-radius: 7px; padding: 0.7rem 1rem; cursor: pointer; transition: all 0.2s; font-size: 0.88rem; color: var(--cream); text-align: left; }
+  .quiz-opt:hover:not(:disabled) { border-color: var(--gold); background: rgba(200,151,58,0.1); }
+  .quiz-opt.richtig { background: rgba(45,90,27,0.3); border-color: #5CB85C; color: #90EE90; }
+  .quiz-opt.falsch { background: rgba(139,26,26,0.3); border-color: #CC4444; color: #FFB3B3; }
+  .quiz-opt:disabled { cursor: default; }
+  .quiz-erklaerung { margin-top: 1rem; padding: 0.8rem; border-radius: 7px; font-size: 0.85rem; line-height: 1.6; display: none; }
+  .quiz-erklaerung.show { display: block; }
+  .quiz-erklaerung.ok { background: rgba(45,90,27,0.2); border: 1px solid rgba(92,184,92,0.3); color: #90EE90; }
+  .quiz-erklaerung.nein { background: rgba(139,26,26,0.2); border: 1px solid rgba(204,68,68,0.3); color: #FFB3B3; }
+  .quiz-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; }
+  .quiz-score { font-size: 0.85rem; color: var(--amber); }
+  .btn { background: linear-gradient(135deg, var(--gold), var(--amber)); color: var(--dark); border: none; border-radius: 6px; padding: 0.6rem 1.3rem; cursor: pointer; font-family: 'Source Sans 3', sans-serif; font-size: 0.88rem; font-weight: 700; letter-spacing: 0.5px; transition: all 0.2s; }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(200,151,58,0.4); }
+  .btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+  .btn-ghost { background: transparent; border: 1px solid rgba(200,151,58,0.4); color: var(--amber); }
+  .btn-ghost:hover { background: rgba(200,151,58,0.1); }
+  .info-box { background: linear-gradient(135deg, var(--brown), #2A1200); border: 1px solid rgba(200,151,58,0.25); border-radius: 10px; padding: 1.2rem; margin-bottom: 1rem; }
+  .info-box h3 { font-family: 'Playfair Display', serif; color: var(--gold); margin-bottom: 0.8rem; font-size: 1rem; border-bottom: 1px solid rgba(200,151,58,0.2); padding-bottom: 0.5rem; }
+  .info-box table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+  .info-box th { background: rgba(200,151,58,0.2); color: var(--gold); padding: 0.4rem 0.8rem; text-align: left; font-weight: 600; }
+  .info-box td { padding: 0.35rem 0.8rem; border-bottom: 1px solid rgba(200,151,58,0.1); }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+  .back-btn { display: none; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.85rem; padding: 0.5rem 0; margin-bottom: 1rem; font-family: 'Source Sans 3', sans-serif; }
+  .back-btn:hover { color: var(--amber); }
+  .sec-title { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 1.3rem; margin-bottom: 1.2rem; border-bottom: 1px solid rgba(200,151,58,0.2); padding-bottom: 0.6rem; }
+  .tip-box { background: rgba(200,151,58,0.08); border: 1px solid rgba(200,151,58,0.25); border-radius: 8px; padding: 0.9rem 1rem; font-size: 0.85rem; color: var(--amber); margin-bottom: 1.2rem; line-height: 1.6; }
+  .check-item { display: flex; align-items: flex-start; gap: 0.8rem; padding: 0.6rem 0; border-bottom: 1px solid rgba(200,151,58,0.08); }
+  .check-item:last-child { border-bottom: none; }
+  .check-item input[type=checkbox] { width: 18px; height: 18px; margin-top: 1px; accent-color: var(--gold); cursor: pointer; flex-shrink: 0; }
+  .check-label { font-size: 0.88rem; color: #E0CEAF; line-height: 1.5; cursor: pointer; }
+  .check-item.checked .check-label { text-decoration: line-through; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍺 Bier-Jungsommelier</h1>
+  <p>Prüfungsvorbereitung · Fragen 1–50 &amp; 96</p>
+</header>
+
+<div class="progress-bar-wrap">
+  <span>Lernfortschritt</span>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <span id="progressText">0 / 0 gesehen</span>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('wissen',this)">📚 Wissen</button>
+  <button class="tab-btn" onclick="showTab('tabellen',this)">📊 Übersichten</button>
+  <button class="tab-btn" onclick="showTab('quiz',this)">🎯 Quiz</button>
+  <button class="tab-btn" onclick="showTab('checklist',this)">✅ Checkliste</button>
+</div>
+
+<main>
+
+<!-- WISSEN -->
+<div class="section active" id="tab-wissen">
+  <button class="back-btn" id="backBtn" onclick="showKategorien()">← Zurück zur Übersicht</button>
+  <div id="kategorienView">
+    <p class="sec-title">Themenbereiche</p>
+    <div class="tip-box">💡 Klicke auf ein Thema, um alle Prüfungsfragen &amp; Antworten aufzuklappen</div>
+    <div class="kategorie-grid" id="kategorieGrid"></div>
+  </div>
+  <div id="fragenView" style="display:none">
+    <p class="sec-title" id="fragenTitel"></p>
+    <div id="fragenContainer"></div>
+  </div>
+</div>
+
+<!-- ÜBERSICHTEN -->
+<div class="section" id="tab-tabellen">
+  <p class="sec-title">Wichtige Übersichten</p>
+  <div class="info-box">
+    <h3>📏 Stammwürze &amp; Biergattungen (F. 10, 95, 96)</h3>
+    <table>
+      <thead><tr><th>Gattung</th><th>Stammwürze</th><th>Alkohol</th></tr></thead>
+      <tbody>
+        <tr><td>Alkoholfrei</td><td>7–12 °P</td><td style="color:var(--amber)">max. 0,5 %</td></tr>
+        <tr><td>Alkoholarm</td><td>–</td><td style="color:var(--amber)">max. 1,5 %</td></tr>
+        <tr><td>Leichtbier</td><td>7–12 °P</td><td style="color:var(--amber)">max. 3,7 %</td></tr>
+        <tr><td>Schankbier</td><td>9–11 °P</td><td style="color:var(--amber)">–</td></tr>
+        <tr><td>Vollbier</td><td>mind. 11 °P</td><td style="color:var(--amber)">ca. 5 %</td></tr>
+        <tr><td>Spezialbier</td><td>mind. 12,5 °P</td><td style="color:var(--amber)">–</td></tr>
+        <tr><td>Weizenbier</td><td>11–13 °P</td><td style="color:var(--amber)">4,5–5,5 %</td></tr>
+        <tr><td>Bockbier</td><td>mind. 16 °P</td><td style="color:var(--amber)">–</td></tr>
+        <tr><td>Doppelbock</td><td>mind. 18 °P</td><td style="color:var(--amber)">–</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="two-col">
+    <div class="info-box">
+      <h3>⚗️ Gärungsarten (F. 24, 37)</h3>
+      <table>
+        <thead><tr><th>Merkmal</th><th style="color:var(--amber)">Obergärig</th><th style="color:#7ED860">Untergärig</th></tr></thead>
+        <tbody>
+          <tr><td>Temp.</td><td style="color:var(--amber);text-align:center">12–25 °C</td><td style="color:#7ED860;text-align:center">6–12 °C</td></tr>
+          <tr><td>Dauer</td><td style="color:var(--amber);text-align:center">2–5 Tage</td><td style="color:#7ED860;text-align:center">5–10 Tage</td></tr>
+          <tr><td>Hefe</td><td style="color:var(--amber);text-align:center">schwimmt oben</td><td style="color:#7ED860;text-align:center">sinkt zu Boden</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:0.8rem;font-size:0.82rem;color:#C8A070">
+        <strong style="color:var(--amber)">Obergärig:</strong> Weizen, Kölsch, Altbier<br>
+        <strong style="color:#7ED860">Untergärig:</strong> Lager, Pils, Märzen, Bock
+      </div>
+    </div>
+    <div class="info-box">
+      <h3>📦 Rohstoffbedarf / 1 Liter Bier (F. 13–15, 21, 25)</h3>
+      <div style="font-size:0.88rem;line-height:2.2">
+        <div>💧 Wasser: <strong style="color:var(--amber)">4–8 Liter</strong></div>
+        <div>🌾 Malz: <strong style="color:var(--amber)">~170 g</strong></div>
+        <div>🌱 Braugerste: <strong style="color:var(--amber)">~220 g</strong></div>
+        <div>🌿 Hopfen: <strong style="color:var(--amber)">1,5–3,5 g</strong> <span style="color:var(--muted)">(Pellets: 0,4–1,0 g)</span></div>
+        <div>🧫 Hefe/1 hl: <strong style="color:var(--amber)">½ l dickflüssig</strong></div>
+      </div>
+    </div>
+  </div>
+  <div class="info-box">
+    <h3>🏭 Brauvorgang im Überblick (F. 27–40)</h3>
+    <table>
+      <thead><tr><th>Schritt</th><th>Was passiert?</th><th>Temp./Dauer</th></tr></thead>
+      <tbody>
+        <tr><td>Weichen</td><td>Gerste einweichen</td><td style="color:var(--amber)">1 Tag</td></tr>
+        <tr><td>Keimen</td><td>Stärke wird aufgespaltet, Enzyme entstehen → Grünmalz</td><td style="color:var(--amber)">~1 Woche</td></tr>
+        <tr><td>Darren</td><td>Trocknen → Darrmalz / Farbmalz</td><td style="color:var(--amber)">85–100 °C</td></tr>
+        <tr><td>Maischen – Protein</td><td>Proteinabbau</td><td style="color:var(--amber)">35–50 °C</td></tr>
+        <tr><td>Maischen – Zucker</td><td>Stärke → vergärbarer Malzzucker</td><td style="color:var(--amber)">58–72 °C</td></tr>
+        <tr><td>Abläutern</td><td>Würze (Flüssigkeit) von Treber (Feststoff) trennen</td><td>–</td></tr>
+        <tr><td>Anschwänzen</td><td>Extraktstoffe aus Treber auslaugen</td><td>–</td></tr>
+        <tr><td>Würzekochen</td><td>Bitterhopfen (Beginn) + Aromahopfen (Ende, 5–10 min)</td><td>–</td></tr>
+        <tr><td>Whirlpool</td><td>Trubstoffe absetzen, blanke Würze abziehen</td><td>~30 min</td></tr>
+        <tr><td>Hauptgärung</td><td>Hefe → Alkohol + CO₂</td><td style="color:var(--amber)">3–6 Tage</td></tr>
+        <tr><td>Reifung</td><td>Warm (5°C) + Kalt (–1°C), CO₂ bindet sich</td><td style="color:var(--amber)">2–15 Wochen</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="info-box">
+    <h3>📦 Gebinde – Vor &amp; Nachteile (F. 43–50)</h3>
+    <table>
+      <thead><tr><th>Gebinde</th><th>Vorteil</th><th>Nachteil / Hinweis</th></tr></thead>
+      <tbody>
+        <tr><td>Glasflasche</td><td>Bestes für kleine Mengen</td><td>–</td></tr>
+        <tr><td>KEG (Edelstahl)</td><td>Selbstkühlend, CO₂-Kapsel eingebaut</td><td>Leer ca. 12,5 kg</td></tr>
+        <tr><td>Holzfass</td><td>Gut isolierend, originell</td><td>Kurze Haltbarkeit, Pichen nötig</td></tr>
+        <tr><td>Dose</td><td>Leicht, praktisch</td><td>Pasteurisiert bei 70°C → Geschmack</td></tr>
+        <tr><td>PET-Flasche</td><td>Leicht</td><td>CO₂ entweicht, braucht Multilayer</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:0.7rem;font-size:0.82rem;color:#C8A070">
+      ⏱️ Fass: optimal in <strong style="color:var(--amber)">3 Tagen</strong> leer &nbsp;|&nbsp; Flaschenbier: innerhalb <strong style="color:var(--amber)">4 Wochen</strong>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="section" id="tab-quiz">
+  <p class="sec-title">🎯 Prüfungsquiz</p>
+  <div class="tip-box">Teste dein Wissen! Wähle eine Antwort und sieh sofort ob du richtig liegst.</div>
+  <div id="quizBereich"></div>
+  <div class="quiz-nav">
+    <button class="btn btn-ghost" id="prevBtn" onclick="changeQuiz(-1)">← Zurück</button>
+    <span class="quiz-score" id="quizScore">0 / 0 richtig</span>
+    <button class="btn" id="nextBtn" onclick="changeQuiz(1)">Weiter →</button>
+  </div>
+  <div style="margin-top:1rem;text-align:center">
+    <button class="btn btn-ghost" onclick="resetQuiz()">🔄 Quiz neu starten</button>
+  </div>
+</div>
+
+<!-- CHECKLISTE -->
+<div class="section" id="tab-checklist">
+  <p class="sec-title">✅ Prüfungs-Checkliste</p>
+  <div class="tip-box">Hake ab, was du bereits sicher kannst.</div>
+  <div class="info-box"><h3>📜 Geschichte &amp; Grundlagen (F. 1–11)</h3><div id="checkGrundlagen"></div></div>
+  <div class="info-box"><h3>🌾 Rohstoffe (F. 12–26)</h3><div id="checkRohstoffe"></div></div>
+  <div class="info-box"><h3>🏭 Brauvorgang (F. 27–45)</h3><div id="checkBrauen"></div></div>
+  <div class="info-box"><h3>🛢️ Gebinde &amp; Ausschank (F. 46–50)</h3><div id="checkAusschank"></div></div>
+  <div class="info-box"><h3>🍺 Biersorten (F. 96)</h3><div id="checkSorten"></div></div>
+  <div style="text-align:center;margin-top:1rem">
+    <button class="btn btn-ghost" onclick="resetChecklist()">🔄 Zurücksetzen</button>
+  </div>
+</div>
+
+</main>
+
+<script>
+const kategorien = [
+  { id:'grundlagen', icon:'📜', titel:'Geschichte & Grundlagen', info:'F. 1–11', fragen:[
+    {nr:1, frage:'Was ist Bier? (Definition)', antwort:'• ein aus Zerealien (Malz), Hopfen und Wasser\n• durch Maischen und Kochen hergestelltes\n• durch Hefe vergorenes\n• alkohol- und kohlensäurehaltiges Getränk\nBier ist das einzige gewerblich hergestellte Lebensmittel, das gänzlich frei von unnatürlichen Rohstoffen produziert wird!'},
+    {nr:2, frage:'Wie alt ist Bier?', antwort:'Bier ist so alt wie die Kulturgeschichte der Menschheit. Schon die Sumerer, das älteste bekannte Kulturvolk, erzeugten und tranken Bier. Auch die Babylonier und Ägypter brauten – verwendeten aber noch keinen Hopfen.'},
+    {nr:3, frage:'Was ist „Grut"?', antwort:'Grut ist eine Kräutermischung aus Gagelstrauch, Porst, Harz, Zermit, Lorbeer, Ingwer, Spreu, Kümmel oder Anis (Bezeichnung aus „Grüter am Niederrhein"). Diese Würzmittel enthielten teils giftige Inhaltsstoffe → schwere Krankheiten oder Tod.'},
+    {nr:4, frage:'Wer erfüllte im Mittelalter die Aufgabe des Bierbrauens?', antwort:'Im Mittelalter entwickelten sich die Klöster zu Brauzentren. Starkbiere dienten den Mönchen als Aufbesserung ihrer Fastenkost.'},
+    {nr:5, frage:'Weshalb entwickelten Klöster eine wahre Braukunst? Welches Würzmittel wurde eingesetzt?', antwort:'Bier galt als „Gottesgabe" (berauschende Wirkung). In vielen Kulturen war Bierbereitung eng mit dem Gottesdienst verknüpft; das Wissen wurde von Priestern gehütet. Als Würzmittel wurde gezielt Hopfen eingesetzt.'},
+    {nr:6, frage:'Verbinden Sie: Christian Hansen, Pasteur, Hefe, Reinzuchthefe, James Watt, Carl von Linde, Dampfmaschine, Kühlmaschine', antwort:'• James Watt → Dampfmaschine (erster Einsatz am Kontinent 1821)\n• Carl von Linde → Kältemaschinen für Brauereien\n• Erfindung des Mikroskops (1723) → Hefeforschung möglich\n• Louis Pasteur (1822–1895) + Emil Christian Hansen (1842–1909) → Hefereinzuchten\n• Carl Joseph Napoleon Balling (1843) → Saccharometer + Stammwürzetabellen'},
+    {nr:7, frage:'Welche Biergeschichte begann in Klein-Schwechat?', antwort:'1841 entstand in Klein-Schwechat bei Wien der neuartige Typus des „Lagerbiers nach Wiener Art".'},
+    {nr:8, frage:'Erzählen Sie Wesentliches über das Reinheitsgebot!', antwort:'Das Reinheitsgebot ist die älteste lebensmittelrechtliche Bestimmung der Welt, bis heute gültig. Bier darf nur aus Wasser, Gerste und Hopfen gebraut werden (Hefe war damals noch nicht bekannt). Erlassen von Wilhelm IV. am 23. April 1516.'},
+    {nr:9, frage:'Wofür steht „Codex Alimentarius Austriacus"?', antwort:'Das Österreichische Lebensmittelbuch. Für viele Länder strenges Vorbild; regelt die österreichische Bierherstellung.'},
+    {nr:10, frage:'Was regelt der Codex? (Zerealien, Stammwürze, Konservierung, Zucker, Ascorbinsäure)', antwort:'• Namengebende Zerealien (z.B. Weizenbier) müssen mind. 50 % der Schüttung sein\n• 1° Stammwürze = 1 g Extrakt in 1000 g unvergorener Würze\n• Bier darf NICHT chemisch konserviert werden\n• Zucker erlaubt bei dunklen Bieren / Bockbieren\n• Zuckercouleur nur bei Färbebier\n• Ascorbinsäure darf zugesetzt werden (verhindert Oxidation)'},
+    {nr:11, frage:'Aktuelle Zahlen der österreichischen Brauwirtschaft?', antwort:'Über 1.000 verschiedene Biere in 172 österreichischen Braustätten, darunter 142 Hausbrauereien.'},
+  ]},
+  { id:'rohstoffe', icon:'🌾', titel:'Rohstoffe', info:'F. 12–26', fragen:[
+    {nr:12, frage:'Nennen Sie wichtige Faktoren des Brauwassers!', antwort:'• Klarheit und Farblosigkeit\n• Geruch\n• Verkeimung\n• Anteil gelöster Mineralien (Grad deutscher Härte, °dH)'},
+    {nr:13, frage:'Wasserbedarf für 1 Liter Bier?', antwort:'Ca. 4–8 Liter Wasser pro Liter Bier (inkl. Reinigung von Sudwerk, Flaschen und Fässern).'},
+    {nr:14, frage:'Wo wird heute Malz hergestellt? (2 Beispiele aus Österreich)', antwort:'1. STAMAG (Stadlauer Malzfabrik GesmbH) – Mälzereien in Wien und Graz\n2. Mälzerei Plohberger in Grießkirchen (Oberösterreich)'},
+    {nr:15, frage:'Malzbedarf für 1 Liter Bier?', antwort:'Ca. 170 g Malz (dafür werden ca. 220 g Braugerste benötigt).'},
+    {nr:16, frage:'Wie hängen Malz und Bierfarbe zusammen?', antwort:'Malz verleiht je nach Dauer und Temperatur der Darre hellere oder dunklere Bierfarben. Je höher die Darrtemperatur → desto dunkler das Malz (= Farbmalz).'},
+    {nr:17, frage:'Welche Getreideart wird bevorzugt vermälzt? Welche anderen können verwendet werden?', antwort:'Bevorzugt: zweizeilige Sommergerste (gleichmäßige Körner, hervorragende Keimeigenschaften; Spelzen = Filter im Läuterbottich).\nWeitere: Weizen, Dinkel, Hafer, Mais, Roggen, Reis.'},
+    {nr:18, frage:'Warum ist der Eiweißgehalt des Getreides für Brauereien wichtig?', antwort:'Die weiße Farbe des Bierschaums entsteht durch Schaumbläschen, bei denen Eiweiß CO₂ und Luft einschließt. Farbstoffe binden sich nicht an Eiweiße → nahezu reines Weiß.'},
+    {nr:19, frage:'Erzählen Sie über die Hopfenpflanze und ihre Wirkung!', antwort:'Humulus Lupulus, Familie der Hanfgewächse, mehrjährige Kletterpflanze. Zweihäusig: männlicher Blütenstand = Rispe, weiblicher = Dolde (Ähre). Nur weibliche Pflanzen in Hopfengärten.\nGilt als „Seele des Bieres". Wirkt appetitanregend + antiseptisch (sogar gegen Tuberkulosebazillen).'},
+    {nr:20, frage:'Welche 3 Faktoren beeinflusst Hopfen im Bier?', antwort:'1. Bittere (je nach Menge)\n2. Schaumentwicklung\n3. Haltbarkeit'},
+    {nr:21, frage:'Hopfenanbaugebiete, Hopfenarten, Bedarf für 1 Liter Bier?', antwort:'Größtes Gebiet: Hallertau (Bayern). Auch: Saaz (Tschechien), Mühlviertel (OÖ), Leutschach (Stmk), Waldviertel (NÖ).\n2 Arten: aromareicher Hopfen (z.B. Hallertauer Mittelfrüh) und bitterstoffreicher (z.B. Magnum).\nBedarf: 1,5–3,5 g/l oder 0,4–1,0 g/l Hopfenpellets.'},
+    {nr:22, frage:'Geben Sie 3 Beispiele für Bittereinheiten!', antwort:'Pils: ca. 25–42 BE\nLager: ca. 14–25 BE\nHefeweißbier: ca. 14–25 BE'},
+    {nr:23, frage:'Was ist Hefe und wie vermehrt sie sich?', antwort:'Hefen sind mikroskopisch kleine einzellige Pilze, die sich durch Zellteilung rasch vermehren. In 1 ml Bier sind ca. 15 Mio. Hefezellen enthalten.'},
+    {nr:24, frage:'Welche 2 Hefearten werden für Bierherstellung eingesetzt?', antwort:'Heute ausschließlich Reinzuchthefen:\n• Obergärige Hefe: bildet Ketten, schwimmt oben, 12–25 °C, 2–5 Tage\n• Untergärige Hefe: bildet keine Ketten, sinkt zu Boden, 6–12 °C, 5–10 Tage'},
+    {nr:25, frage:'Wie viel Hefe braucht man für 1 Hektoliter Bier?', antwort:'½ Liter dickflüssige Hefe pro Hektoliter Bier.'},
+    {nr:26, frage:'Welche anderen Zerealien werden in Amerika oder China verwendet?', antwort:'Mais in Amerika, Reis in China.'},
+  ]},
+  { id:'brauen', icon:'🏭', titel:'Brauvorgang', info:'F. 27–45', fragen:[
+    {nr:27, frage:'Nennen Sie die Abteilungen einer Brauerei und ihre Hauptaufgaben!', antwort:'1. Mälzerei – Rohgetreide → Malz\n2. Sudhaus – Stärke → Malzzucker\n3. Gärkeller – Würze → Jungbier (Alkohol + CO₂)\n4. Lagerkeller – Reifung, Geschmacksabrundung, CO₂-Bindung\n5. Filtration – Trubstoffe herausfiltern\n6. Drucktankkeller – Zwischenlagerung vor Abfüllung\n7. Abfüllung – maschinelles Abfüllen'},
+    {nr:28, frage:'Erklären Sie den Vorgang des Mälzens! (Keimen, Weichen, Enzyme, Darren, Farbmalz)', antwort:'1. Gerste reinigen & sortieren\n2. Weichen – 1 Tag einweichen\n3. Keimen in Keimkästen (~1 Woche) → Grünmalz. Unlösliche Stärke wird aufgespaltet, Enzyme entstehen.\n4. Darren bei 85–100 °C → Darrmalz\nJe höher die Temperatur → desto dunkler = Farbmalz'},
+    {nr:29, frage:'Was bedeutet Schroten?', antwort:'Das Zerkleinern von Malz vor dem Brauen. Schrot ist grobes Mehl, das sich im Wasser besser löst.'},
+    {nr:30, frage:'Was geschieht beim Maischen? Temperaturen? Aufgabe der Enzyme?', antwort:'Zweck: Stärke zu Zucker abbauen + weitere Extraktstoffe bilden.\nTemperaturen:\n• 35–50 °C: Proteinabbau\n• 58–72 °C: Stärke → vergärbarer Malzzucker\nEnzyme steuern die chemischen Umwandlungen bei den jeweiligen Optimaltemperaturen.'},
+    {nr:31, frage:'Wie nennt der Brauer das Filtern im Läuterbottich?', antwort:'Abläutern.'},
+    {nr:32, frage:'Wie heißen die malzzuckerhaltige Flüssigkeit und die festen Rückstände?', antwort:'Würze = die malzzuckerhaltige Flüssigkeit\nTreber = die festen Rückstände (Schalen, Spelzen)'},
+    {nr:33, frage:'Wie nennt man das Auslaugen von Extraktstoffen aus dem Treber?', antwort:'Anschwänzen.'},
+    {nr:34, frage:'Was stellt der Brauer beim Würzekochen ein?', antwort:'Bitterhopfen (zu Beginn) → Herbheit und Bittergeschmack\nAromahopfen (am Ende, nur 5–10 min) → Hopfenaroma\nWasser verdampft bis zum gewünschten Extraktgehalt; unerwünschte Eiweißstoffe scheiden aus.'},
+    {nr:35, frage:'Was bedeutet Spindeln?', antwort:'Mit der Spindel wird nach dem Kochende der Stammwürzegehalt der Würze gemessen.'},
+    {nr:36, frage:'Erklären Sie das Whirlpool-Prinzip!', antwort:'Würze strömt seitlich in einen zylinderförmigen Behälter → bildet Wirbel. Nach ca. 30 Minuten beruhigt sich der Wirbel. In der Mitte bildet sich ein Kegel aus Hopfen und Trubstoffen. Blanke Würze wird seitlich abgezogen und über Plattenkühler abgekühlt.'},
+    {nr:37, frage:'Erklären Sie Gärung, Ober- und Untergärung!', antwort:'Hauptgärung: Hefe vergärt Malzzucker in 3–6 Tagen → Alkohol + CO₂.\n\nObergärung: obergärige Hefe bildet Ketten → von CO₂ an Oberfläche getragen. 12–25 °C, 2–5 Tage.\n\nUntergärung: keine Kettenbildung → sinkt zu Boden. 6–12 °C, 5–10 Tage (auch bis 20°C möglich). Bestimmt maßgeblich den Biercharakter!'},
+    {nr:38, frage:'Was sind Kräusen?', antwort:'Ab dem 2. Tag bringt aufsteigendes CO₂ Bewegung in die Würze und befördert Trub- und Hopfenbitterstoffe in die Schaumdecke. Diese bräunliche Schaumdecke heißt „Kräuse".'},
+    {nr:39, frage:'Was bedeutet Schlauchen?', antwort:'Wenn die Kräuse zusammenfällt, wird das Jungbier in die Lagertanks umgefüllt. Dieser Vorgang heißt „Schlauchen".'},
+    {nr:40, frage:'Was passiert bei der Reifung/Nachgärung?', antwort:'Jungbier reift in Lagertanks unter leichtem Druck:\n• Warmphase: ca. 5 °C\n• Kaltphase: ca. –1 °C (Hefe & Trubstoffe setzen sich ab, CO₂ bindet sich)\nDauer: 2–15 Wochen. Ergebnis: Zwicklbier, Tankbier oder Kellerbier.'},
+    {nr:41, frage:'Warum werden Flaschen und Fässer vor dem Befüllen mit CO₂ gespült?', antwort:'Unter Gegendruck wird das Bier in sauerstofffreie und sterile Gebinde abgefüllt. Der vorgespannte Druck verhindert, dass das kalte Bier beim Abfüllen aufschäumt.'},
+    {nr:42, frage:'Was versteht man unter Flaschengärung?', antwort:'Die Reifung / Nachgärung in Flaschen nach der Hauptgärung.'},
+    {nr:43, frage:'Zählen Sie Gebinde zur Bierabfüllung auf!', antwort:'Glasflasche, Kunststoffflasche, Edelstahlfass (KEG), Holzfass, Dose, Tank, Six-Packs, Bügelflaschen, Flaschen mit Schraubverschluss und schraubbarem Kronkork.'},
+    {nr:44, frage:'Vor- und Nachteile der einzelnen Gebinde?', antwort:'Glasflasche: bestes Gebinde für kleine Mengen\nKEG: selbstkühlend, eingebaute CO₂-Kapsel, ideal bei geringem Verkauf; leer ca. 12,5 kg\nHolzfass: gut isolierend, originell – aber kurze Haltbarkeit, intensive Pflege (Pichen)\nDose: Weißblech/Aluminium, nach Abfüllung auf 70 °C pasteurisiert → mögliche Geschmackseinbußen\nPET: braucht teure Multilayerflaschen (normales PET lässt CO₂ entweichen)'},
+    {nr:45, frage:'Optimaler Einsatz von PET-Flaschen?', antwort:'Modernes PET kann für Bierflaschen nicht verwendet werden, da CO₂ langsam entweicht. Teure Multilayerflaschen nötig. In Österreich kaum, in anderen Ländern zunehmend gebräuchlich.'},
+  ]},
+  { id:'gebinde', icon:'🛢️', titel:'Gebinde & Ausschank', info:'F. 46–50', fragen:[
+    {nr:46, frage:'Was sind Kegs?', antwort:'Edelstahlfässer. „Keg" ist Englisch und heißt Fass. Ein leeres Keg wiegt ca. 12,5 kg.'},
+    {nr:47, frage:'Aus welchen Bauteilen besteht ein Edelstahlfass? Erklären Sie die Funktionsweise!', antwort:'Das Keg-Fass ist ein zylindrisches Edelstahlfass. Auf der Mitte der Oberseite befindet sich der Keg-Kopf (Ventil). Darauf wird ein passender Zapfkopf gesetzt, der Treibgas (CO₂ oder N₂) aus einem externen Behälter zuführt und den Inhalt zur Zapfanlage ableitet. Der Zapfkopf schließt das Keg dicht ab → nahezu keimfreier Transport bis ins Glas.'},
+    {nr:48, frage:'Wie schlägt man ein Holzfass an?', antwort:'Unter einem Fassanstich versteht man das Einschlagen eines Zapfhahns in ein mit Bier gefülltes Holzfass mit Hilfe eines Hammers. Die hohe Kunst: so durchführen, dass möglichst wenig Bier spritzt.'},
+    {nr:49, frage:'Welche Gebindegrößen kennen Sie? Optimaler Einsatz?', antwort:'Größen: 20 l, 25 l, 30 l, 50 l / Tankausschank: bis 10.000 l\nVerbrauch: mind. 2.500 l pro Fassbiersorte pro Jahr\nFass: optimal in 3 Tagen leer\nFlaschenbier: innerhalb 4 Wochen verbrauchen'},
+    {nr:50, frage:'Wie würden Sie Randbiersorten anbieten?', antwort:'Bei geringerem Verbrauch und bei Randbiersorten immer Flaschenware anbieten.'},
+  ]},
+  { id:'sorten', icon:'🍺', titel:'Biersorten (Frage 96)', info:'F. 96 – alle Biersorten', fragen:[
+    {nr:96, frage:'Charakterisieren Sie: Alkoholfreies Bier', antwort:'Gärungsart: ober- oder untergärig | Stammwürze: 7–12 °P | Alkohol: max. 0,5 %\nAlkohol wird entweder nicht gebildet (Gärung gestoppt) oder nachträglich schonend entzogen.\nCharakter: goldgelb, dichter cremiger Schaum, dezent hopfige Nase, fein hopfig im Geschmack\nServiertemp.: ca. 8 °C'},
+    {nr:96, frage:'Charakterisieren Sie: Alkoholarmes Bier', antwort:'Alkoholgehalt: max. 1,5 %\nNicht verwechseln mit alkoholfreiem Bier (max. 0,5 %)!'},
+    {nr:96, frage:'Charakterisieren Sie: Leichtbier', antwort:'Stammwürze: 7–12 °P | Alkohol: max. 3,7 Vol.% | Aussehen: sehr hell\nCharakter: zurückhaltende Nase, schlank am Gaumen, deutliche Hopfenaromen, feinherb im Nachtrunk\nWeniger Kalorien | Temp.: 6 °C | Glas: dünnwandiger Pokal'},
+    {nr:96, frage:'Charakterisieren Sie: Schankbier', antwort:'Stammwürze: 9–11 °P\nBesonders leichtes, bekömmliches Bier – vor allem als Durstlöscher.'},
+    {nr:96, frage:'Charakterisieren Sie: Vollbier', antwort:'Stammwürze: mind. 11 °P\nWird als „Vollbier" deklariert, wenn keinem bestimmten Biertyp zugeordnet (z.B. österreichische Premium-Biere mit ca. 12,5° SW).'},
+    {nr:96, frage:'Charakterisieren Sie: Lager-/Märzenbier', antwort:'Österreichische Bezeichnung für hellgelbes untergäriges Vollbier.\nStammwürze: mind. 11 °P | Temp.: 8 °C\nCharakter: ausgewogen malzig, mild hopfenbitter, goldgelb\nNase: malzig, nussig, fruchtig | Gaumen: leicht trinkbar, Getreide-/Brotaromen\nGlas: Becher, Seidel oder Tonkrug'},
+    {nr:96, frage:'Charakterisieren Sie: Pilsbier', antwort:'Stammwürze: mind. 11 °P | Temp.: 7–9 °C\nCharakter: intensives Hopfenaroma, hellfarbig, erfrischend, weniger malzig\nNase: fruchtig, hopfig | Gaumen: dicht, prickelnd, Bittere von Antrunk bis Nachtrunk\nGlas: dünnwandige Pokale (unterstützen Schaumhaltbarkeit)'},
+    {nr:96, frage:'Charakterisieren Sie: Spezialbier', antwort:'Stammwürze: mind. 12,5 °P | Temp.: 8–9 °C\nCharakter: kräftig, ausgewogen würzig, fein gehopft, meist hellgelb\nGeschmack: dichte Getreidearomen, fruchtig, röstig, nussig, vollmundig, langer Nachtrunk mit deutlicher Bittere\nGlas: Seidel oder Tonkrug'},
+    {nr:96, frage:'Charakterisieren Sie: Bockbier & Doppelbockbier', antwort:'Bockbier: Starkbier, saisonal (Fastenzeit). Bernsteinfarben bis dunkel, vollmundig, würzig, fein gehopft.\nStammwürze: mind. 16 °P | Temp.: 10 °C\nDoppelbock: mind. 18 °P | Temp.: 10–12 °C\nIm Duft: dicht, röstig, malzig. Gaumen wuchtig, wärmend.\nGlas: bauchige Gläser oder Tonkrug\nWeitere: Eisbock (~20% SW, ~8% Alk.), Weizenbock (obergärig, 16–18% SW, ca. 7,5% Alk.)'},
+    {nr:96, frage:'Charakterisieren Sie: Weizenbier', antwort:'Gärungsart: obergärig | Stammwürze: 11–13 °P | Alkohol: 4,5–5,5 Vol.%\nMind. 50% Weizenmalz in der Schüttung.\nCharakter: erfrischend spritzig, kohlensäurereich, wenig bitter (schwächer gehopft)\nFarbe: sehr hell bis schwarz (dunkle Weizen oft hefetrüb)\nAroma: feinprickelnde Kohlensäure, reife Bananen, fruchtig-süß\nGlas: dickwandig und bauchig (Aromaentfaltung)'},
+    {nr:96, frage:'Charakterisieren Sie: Zwickel-/Kellerbier', antwort:'Sehr vollmundiges Bier. Unfiltriert → trüb (enthält Hefe und Eiweißstoffe).\nNach der Reifung direkt genießbar, ohne Filtration.'},
+    {nr:96, frage:'Charakterisieren Sie: Dunkles Bier', antwort:'Vollmundig, schwach gehopft, blankes untergäriges Voll- oder Schankbier.\nFarbe: rötlicher Bernstein bis dunkles Kastanienbraun\nCharakter: rauchige Röst- und Karamellaromen, malzig-süßlich, sahnig-cremig am Gaumen\nFarbe entsteht durch Darrtemperatur ca. 100–110 °C'},
+    {nr:96, frage:'Charakterisieren Sie: Radler', antwort:'Mischgetränk aus Bier und Limonade, üblicherweise 1:1.\nCharakter: extrem erfrischend und durstlöschend\nAromen: Frucht- und Kräuteraromen (Zitrone, Holunder, Apfel)\nAlkohol: ca. halb so viel wie reines Bier; auch alkoholfrei erhältlich'},
+  ]},
+];
+
+const quizFragen = [
+  {frage:'Welches Reinheitsgebot-Datum ist korrekt?', optionen:['1. Mai 1487','23. April 1516','15. März 1600','4. Juni 1721'], richtig:1, erklaerung:'Das Reinheitsgebot wurde am 23. April 1516 von Wilhelm IV. erlassen.'},
+  {frage:'Was bedeutet 1° Stammwürze?', optionen:['1 g Alkohol pro 100 g Bier','1 g Extrakt in 1000 g unvergorener Würze','1 ml CO₂ pro Liter','1 g Hopfen pro 10 l'], richtig:1, erklaerung:'1° Stammwürze = 1 g Extrakt (gelöste Stoffe aus Malz & Hopfen) in 1000 g unvergorener Würze.'},
+  {frage:'Bei welcher Temperatur wird Stärke beim Maischen in Zucker umgewandelt?', optionen:['35–50 °C','58–72 °C','85–100 °C','12–25 °C'], richtig:1, erklaerung:'58–72 °C: Stärke → Malzzucker (Enzyme optimal). Bei 35–50 °C erfolgt der Proteinabbau.'},
+  {frage:'Was sind Würze und Treber?', optionen:['Würze=fest, Treber=flüssig','Würze=malzzuckerhaltige Flüssigkeit, Treber=feste Rückstände','Beide das Gleiche','Würze entsteht nach der Gärung'], richtig:1, erklaerung:'Nach dem Abläutern: Würze = malzzuckerhaltige Flüssigkeit, Treber = feste Rückstände.'},
+  {frage:'Stammwürze von Bockbier mindestens?', optionen:['11 °P','12,5 °P','16 °P','21 °P'], richtig:2, erklaerung:'Bockbier: mind. 16 °P. Doppelbock: mind. 18 °P.'},
+  {frage:'Wie viel Wasser für 1 Liter Bier?', optionen:['1–2 Liter','2–3 Liter','4–8 Liter','10–15 Liter'], richtig:2, erklaerung:'Ca. 4–8 Liter Wasser pro Liter Bier (inkl. Reinigung).'},
+  {frage:'Obergärige Hefe vergärt bei welcher Temperatur?', optionen:['0–6 °C','6–12 °C','12–25 °C','25–40 °C'], richtig:2, erklaerung:'Obergärige Hefe: 12–25 °C, wärmer und rascher. Untergärige Hefe: 6–12 °C.'},
+  {frage:'Was bedeutet „Anschwänzen"?', optionen:['Zapfhahn ins Holzfass einschlagen','Extraktstoffe aus dem Treber auslaugen','Jungbier in Lagertanks umfüllen','Würze im Whirlpool klären'], richtig:1, erklaerung:'Anschwänzen = Brauer laugt aus den Treberrückständen noch verbliebene Extraktstoffe aus.'},
+  {frage:'Welches Gebinde wird nach Abfüllung auf 70°C erhitzt?', optionen:['Glasflasche','KEG','Holzfass','Dose'], richtig:3, erklaerung:'Dosenbier wird auf 70°C pasteurisiert – mögliche Geschmackseinbußen.'},
+  {frage:'Weizenbier muss mindestens wie viel % Weizenmalz enthalten?', optionen:['25 %','40 %','50 %','75 %'], richtig:2, erklaerung:'Laut Codex: mindestens 50% Weizenmalz bei Weizenbier.'},
+  {frage:'Was nennt man die bräunliche Schaumdecke während der Hauptgärung?', optionen:['Treber','Kräusen','Grünmalz','Stammwürze'], richtig:1, erklaerung:'Kräusen = bräunliche Schaumdecke ab dem 2. Gärtag. Wenn sie zusammenfällt → Schlauchen.'},
+  {frage:'Welche Stammwürze hat Schankbier?', optionen:['7–9 °P','9–11 °P','11–13 °P','mind. 16 °P'], richtig:1, erklaerung:'Schankbier: 9–11 °P Stammwürze – besonders leichtes, bekömmliches Bier.'},
+];
+
+const checklisten = {
+  checkGrundlagen:[
+    'F.1 – Definition von Bier (Zerealien, Maischen, Hefe, alkohol- & kohlensäurehaltig)',
+    'F.2 – Geschichte: Sumerer → Babylonier → Ägypter (noch kein Hopfen)',
+    'F.3 – Grut: Kräutermischung, giftige Inhaltsstoffe',
+    'F.4 – Klöster als Brauzentren im Mittelalter',
+    'F.5 – Bier als "Gottesgabe", Hopfen als Würzmittel',
+    'F.6 – Watt (Dampfmaschine), Linde (Kältemaschine), Pasteur & Hansen (Hefen), Balling (Saccharometer)',
+    'F.7 – 1841 Klein-Schwechat: Lagerbier nach Wiener Art',
+    'F.8 – Reinheitsgebot: 23. April 1516, Wilhelm IV., Wasser + Gerste + Hopfen',
+    'F.9 – Codex Alimentarius Austriacus = Österreichisches Lebensmittelbuch',
+    'F.10 – Codex: 50% Zerealien, Stammwürze-Definition, keine Konservierung, Ascorbinsäure OK',
+    'F.11 – Österreich: 172 Braustätten, 142 Hausbrauereien, 1000+ Biere',
+  ],
+  checkRohstoffe:[
+    'F.12 – Brauwasser: 4 Faktoren (Klarheit, Geruch, Verkeimung, Mineralien)',
+    'F.13 – Wasserbedarf: 4–8 l pro Liter Bier',
+    'F.14 – Mälzereien: STAMAG (Wien/Graz), Plohberger (Grießkirchen)',
+    'F.15 – Malzbedarf: ~170 g Malz / ~220 g Braugerste pro Liter',
+    'F.16 – Malz & Farbe: höhere Darrtemperatur = dunkleres Farbmalz',
+    'F.17 – zweizeilige Sommergerste (bevorzugt); weitere: Weizen, Dinkel, Mais, Roggen, Reis',
+    'F.18 – Eiweiß schließt CO₂ ein → weißer Schaum',
+    'F.19 – Hopfenpflanze: Humulus Lupulus, Dolden, "Seele des Bieres", antiseptisch',
+    'F.20 – 3 Hopfeneinflüsse: Bittere, Schaumentwicklung, Haltbarkeit',
+    'F.21 – Hallertau (größtes Gebiet), Saaz, Mühlviertel, Waldviertel, Leutschach',
+    'F.21 – Aromahopfen (Hallertauer Mittelfrüh) vs. Bitterhopfen (Magnum)',
+    'F.22 – Bittereinheiten: Pils 25–42 BE, Lager & Weizen 14–25 BE',
+    'F.23 – Hefe: einzellige Pilze, Zellteilung, 15 Mio./ml',
+    'F.24 – Obergärig (12–25°C, 2–5 Tage) vs. Untergärig (6–12°C, 5–10 Tage)',
+    'F.25 – ½ l dickflüssige Hefe pro Hektoliter Bier',
+    'F.26 – Mais (Amerika), Reis (China)',
+  ],
+  checkBrauen:[
+    'F.27 – 7 Abteilungen einer Brauerei und ihre Aufgaben',
+    'F.28 – Mälzen: Weichen → Keimen (Grünmalz) → Darren (Darrmalz/Farbmalz)',
+    'F.29 – Schroten = Zerkleinern des Malzes vor dem Brauen',
+    'F.30 – Maischen: Protein 35–50°C, Zucker 58–72°C, Enzyme',
+    'F.31 – Abläutern = Filtern im Läuterbottich',
+    'F.32 – Würze (Flüssigkeit) vs. Treber (feste Rückstände)',
+    'F.33 – Anschwänzen = Extraktstoffe aus Treber auslaugen',
+    'F.34 – Bitterhopfen zu Beginn, Aromahopfen am Ende (5–10 min)',
+    'F.35 – Spindeln = Stammwürzegehalt messen',
+    'F.36 – Whirlpool: Wirbel → Trubkegel → blanke Würze abziehen',
+    'F.37 – Obergärung vs. Untergärung (Temp., Dauer, Hefeverhalten)',
+    'F.38 – Kräusen = bräunliche Schaumdecke in der Hauptgärung',
+    'F.39 – Schlauchen = Jungbier in Lagertanks umfüllen',
+    'F.40 – Reifung: Warmphase 5°C, Kaltphase –1°C, 2–15 Wochen',
+    'F.41 – CO₂-Spülung vor Abfüllung (Gegendruck, sauerstofffrei)',
+    'F.42 – Flaschengärung = Nachgärung in der Flasche',
+    'F.43 – Alle Gebinde aufzählen können',
+    'F.44 – Vor- und Nachteile aller Gebinde',
+    'F.45 – PET: Multilayerflaschen nötig, kaum in Österreich',
+  ],
+  checkAusschank:[
+    'F.46 – Keg = Edelstahlfass, leer ca. 12,5 kg',
+    'F.47 – Keg-Aufbau: Keg-Kopf, Zapfkopf, CO₂/N₂-Zufuhr, keimfreier Ausschank',
+    'F.48 – Holzfass anschlagen: Zapfhahn mit Hammer einschlagen',
+    'F.49 – Gebindegrößen: 20/25/30/50 l; Fass in 3 Tagen leer; Flasche in 4 Wochen',
+    'F.50 – Randbiersorten: immer als Flaschenware anbieten',
+  ],
+  checkSorten:[
+    'F.96 – Alkoholfreies Bier: max. 0,5%, 8°C',
+    'F.96 – Alkoholarmes Bier: max. 1,5% (Unterschied!)',
+    'F.96 – Leichtbier: max. 3,7%, 6°C, schlank, dünnwandiger Pokal',
+    'F.96 – Schankbier: 9–11°P, Durstlöscher',
+    'F.96 – Vollbier: mind. 11°P',
+    'F.96 – Lager/Märzen: hellgelb, untergärig, malzig-mild, 8°C, Becher/Seidel/Tonkrug',
+    'F.96 – Pils: intensiv hopfig, 7–9°C, dünnwandiger Pokal',
+    'F.96 – Spezialbier: mind. 12,5°P, kräftig-würzig, 8–9°C, Seidel/Tonkrug',
+    'F.96 – Bockbier: mind. 16°P, bernstein–dunkel, 10°C, bauchiges Glas',
+    'F.96 – Doppelbock: mind. 18°P, 10–12°C',
+    'F.96 – Weizenbier: obergärig, mind. 50% Weizenmalz, Bananenaroma, bauchiges Glas',
+    'F.96 – Zwickel-/Kellerbier: unfiltriert, hefetrüb',
+    'F.96 – Dunkles Bier: Röst-/Karamell, malzig-süßlich, 100–110°C Darrtemp.',
+    'F.96 – Radler: Bier + Limo 1:1, erfrischend',
+  ],
+};
+
+let gesehene = new Set();
+let quizIndex = 0;
+let quizBeantwortet = new Array(quizFragen.length).fill(false);
+let quizRichtig = new Array(quizFragen.length).fill(false);
+
+function showTab(name, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function showKategorien() {
+  document.getElementById('kategorienView').style.display = 'block';
+  document.getElementById('fragenView').style.display = 'none';
+  document.getElementById('backBtn').style.display = 'none';
+}
+
+function showFragen(katId) {
+  const kat = kategorien.find(k => k.id === katId);
+  if (!kat) return;
+  document.getElementById('kategorienView').style.display = 'none';
+  document.getElementById('fragenView').style.display = 'block';
+  document.getElementById('backBtn').style.display = 'block';
+  document.getElementById('fragenTitel').textContent = kat.icon + ' ' + kat.titel;
+  const container = document.getElementById('fragenContainer');
+  container.innerHTML = '';
+  kat.fragen.forEach((f, i) => {
+    const id = katId + '-' + i;
+    const div = document.createElement('div');
+    div.className = 'akkordeon';
+    div.id = 'akk-' + id;
+    div.innerHTML = `<div class="akk-header" onclick="toggleAkk('${id}')"><div><span class="akk-num">Frage ${f.nr}</span><p class="akk-frage" style="margin-top:0.3rem">${f.frage}</p></div><span class="akk-arrow">▼</span></div><div class="akk-body">${formatAntwort(f.antwort)}</div>`;
+    container.appendChild(div);
+  });
+}
+
+function formatAntwort(text) {
+  const lines = text.split('\n');
+  let html = '', inList = false;
+  lines.forEach(line => {
+    line = line.trim();
+    if (line.match(/^\d+\./) || line.startsWith('•')) {
+      if (!inList) { html += '<ul>'; inList = true; }
+      html += '<li>' + line.replace(/^[\d]+\.\s*|^•\s*/, '') + '</li>';
+    } else {
+      if (inList) { html += '</ul>'; inList = false; }
+      if (line) html += '<p>' + line + '</p>';
+    }
+  });
+  if (inList) html += '</ul>';
+  return html;
+}
+
+function toggleAkk(id) {
+  const akk = document.getElementById('akk-' + id);
+  const wasOpen = akk.classList.contains('open');
+  akk.classList.toggle('open');
+  if (!wasOpen) { gesehene.add(id); updateProgress(); }
+}
+
+function updateProgress() {
+  const total = kategorien.reduce((sum, k) => sum + k.fragen.length, 0);
+  const pct = total > 0 ? Math.round((gesehene.size / total) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = gesehene.size + ' / ' + total + ' gesehen';
+}
+
+function renderKategorien() {
+  const grid = document.getElementById('kategorieGrid');
+  kategorien.forEach(k => {
+    const div = document.createElement('div');
+    div.className = 'kategorie-karte';
+    div.onclick = () => showFragen(k.id);
+    div.innerHTML = `<div class="kat-icon">${k.icon}</div><div class="kat-titel">${k.titel}</div><div class="kat-info">${k.fragen.length} Fragen · ${k.info}</div>`;
+    grid.appendChild(div);
+  });
+}
+
+function renderQuiz() {
+  const q = quizFragen[quizIndex];
+  const answered = quizBeantwortet[quizIndex];
+  document.getElementById('quizBereich').innerHTML = `<div class="quiz-karte"><div class="quiz-counter">Frage ${quizIndex + 1} von ${quizFragen.length}</div><div class="quiz-frage">${q.frage}</div><div class="quiz-optionen">${q.optionen.map((opt, i) => { let cls = 'quiz-opt'; if (answered) { if (i === q.richtig) cls += ' richtig'; else if (i === answered - 1 && i !== q.richtig) cls += ' falsch'; } return `<button class="${cls}" ${answered ? 'disabled' : ''} onclick="antworten(${i})">${opt}</button>`; }).join('')}</div><div class="quiz-erklaerung ${answered ? 'show' : ''} ${answered ? (quizRichtig[quizIndex] ? 'ok' : 'nein') : ''}">${answered ? (quizRichtig[quizIndex] ? '✅ Richtig! ' : '❌ Leider falsch. ') + q.erklaerung : ''}</div></div>`;
+  const richtig = quizRichtig.filter(Boolean).length;
+  const beantw = quizBeantwortet.filter(Boolean).length;
+  document.getElementById('quizScore').textContent = richtig + ' / ' + beantw + ' richtig';
+  document.getElementById('prevBtn').disabled = quizIndex === 0;
+  document.getElementById('nextBtn').disabled = quizIndex === quizFragen.length - 1;
+}
+
+function antworten(i) {
+  if (quizBeantwortet[quizIndex]) return;
+  quizBeantwortet[quizIndex] = i + 1;
+  quizRichtig[quizIndex] = (i === quizFragen[quizIndex].richtig);
+  renderQuiz();
+}
+
+function changeQuiz(dir) {
+  quizIndex = Math.max(0, Math.min(quizFragen.length - 1, quizIndex + dir));
+  renderQuiz();
+}
+
+function resetQuiz() {
+  quizIndex = 0;
+  quizBeantwortet = new Array(quizFragen.length).fill(false);
+  quizRichtig = new Array(quizFragen.length).fill(false);
+  renderQuiz();
+}
+
+function renderCheckliste() {
+  Object.entries(checklisten).forEach(([cId, items]) => {
+    const container = document.getElementById(cId);
+    if (!container) return;
+    container.innerHTML = '';
+    items.forEach((item, i) => {
+      const id = cId + '-' + i;
+      const div = document.createElement('div');
+      div.className = 'check-item';
+      div.id = 'item-' + id;
+      div.innerHTML = `<input type="checkbox" id="cb-${id}" onchange="toggleCheck('${id}')"><label class="check-label" for="cb-${id}">${item}</label>`;
+      container.appendChild(div);
+    });
+  });
+}
+
+function toggleCheck(id) {
+  const cb = document.getElementById('cb-' + id);
+  document.getElementById('item-' + id).classList.toggle('checked', cb.checked);
+}
+
+function resetChecklist() {
+  document.querySelectorAll('.check-item input').forEach(cb => cb.checked = false);
+  document.querySelectorAll('.check-item').forEach(el => el.classList.remove('checked'));
+}
+
+renderKategorien();
+renderQuiz();
+renderCheckliste();
+updateProgress();
+</script>
+</body>
+</html>
